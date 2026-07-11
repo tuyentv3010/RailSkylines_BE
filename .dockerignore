@@ -1,0 +1,29 @@
+# Build output & caches (sẽ được build lại trong image)
+build/
+.gradle/
+bin/
+
+# Git
+.git/
+.gitignore
+
+# Secrets / local config (KHÔNG copy vào image)
+.env
+*.env
+
+# Logs & crash dumps
+*.log
+hs_err_pid*
+replay_pid*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db

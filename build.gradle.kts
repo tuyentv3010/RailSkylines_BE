@@ -45,3 +45,8 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// Disable the plain (non-executable) jar so build/libs has only the bootable jar
+tasks.named<Jar>("jar") {
+	enabled = false
+}

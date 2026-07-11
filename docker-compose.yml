@@ -1,0 +1,34 @@
+# Chạy CẢ stack ở LOCAL (build + run): docker compose up -d --build
+# - Lấy secret từ file .env (env_file) — .env đã gitignore
+# - MySQL + Backend chạy chung mạng mặc định của compose (gọi nhau bằng tên service)
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MYSQL_DATABASE: railskylines
+      MYSQL_USER: railskylines
+      MYSQL_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tuyentvwork/railskylines-be:latest
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    env_file: .env
+    environment:
+      # Override: trong Docker, DB là service "mysql", KHÔNG phải localhost
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/railskylines
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql-data:

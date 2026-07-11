@@ -1,7 +1,9 @@
 package com.fourt.railskylines.config;
 
 import java.util.Arrays;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -11,29 +13,31 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
+    // Comma-separated allowed origins; override via env CORS_ALLOWED_ORIGINS.
+    // Default covers the production frontend + local dev.
+    @Value("${CORS_ALLOWED_ORIGINS:https://railskylines.inova.id.vn,http://localhost:3000}")
+    private List<String> allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // cho phép các URL nào có thể kết nối tới backend
-        configuration.setAllowedOrigins(
-                Arrays.asList("https://railskylines-fe-4.onrender.com", "https://railskylines-fe-5.onrender.com",
-                        "https://railskylines-fe-6.onrender.com", "http://localhost:3000"));
+        // Origins allowed to call the backend
+        configuration.setAllowedOrigins(allowedOrigins);
 
-        // các method nào đc kết nối
+        // Allowed HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // các phần header được phép gửi lên
+        // Allowed request headers
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
 
-        // gửi kèm cookies hay không
+        // Send cookies / credentials
         configuration.setAllowCredentials(true);
 
-        // thời gian pre-flight request có thể cache (tính theo seconds)
+        // Pre-flight cache duration (seconds)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // cấu hình cors cho tất cả api
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
