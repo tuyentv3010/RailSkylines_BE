@@ -1,15 +1,27 @@
 when:
-  - event: tag        # chỉ build khi push TAG
+  - event: tag
 
 steps:
   build-push:
     image: woodpeckerci/plugin-docker-buildx
     settings:
       repo: tuyentvwork/railskylines-be
-      tags:
-        - ${CI_COMMIT_TAG}    # image tag = tên git tag
-        - latest
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      tags: [ "${CI_COMMIT_TAG}", latest ]
+      platforms: linux/amd64
+      cache_from: tuyentvwork/railskylines-be:latest
+      username: { from_secret: docker_username }
+      password: { from_secret: docker_password }
+
+  trigger-komodo-deploy:
+    image: curlimages/curl:latest
+    environment:
+      KOMODO_URL: { from_secret: komodo_url }
+      KOMODO_API_KEY: { from_secret: komodo_api_key }
+      KOMODO_API_SECRET: { from_secret: komodo_api_secret }
+    commands:
+      - >
+        curl -fsS -X POST "$KOMODO_URL/execute"
+        -H "Content-Type: application/json"
+        -H "X-Api-Key: $KOMODO_API_KEY"
+        -H "X-Api-Secret: $KOMODO_API_SECRET"
+        -d '{"type":"DeployStack","params":{"stack":"railskylines-be","stop_time":10}}'

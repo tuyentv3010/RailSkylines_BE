@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fourt.railskylines.domain.response.file.ResUploadFileDTO;
 import com.fourt.railskylines.service.FileService;
+import com.fourt.railskylines.service.MinioService;
 import com.fourt.railskylines.util.annotation.APIMessage;
 import com.fourt.railskylines.util.error.StorageException;
 
@@ -32,17 +33,19 @@ public class FileController {
     @Value("${railskylines.upload-file.base-uri}")
     private String baseURI;
     private final FileService fileService;
+    private final MinioService minioService;
 
-    public FileController(FileService fileService) {
+    public FileController(FileService fileService, MinioService minioService) {
         this.fileService = fileService;
+        this.minioService = minioService;
     }
 
     @PostMapping("/files")
     @APIMessage("Upload single file")
     public ResponseEntity<ResUploadFileDTO> upload(@RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam("folder") String folder)
-            throws URISyntaxException, IOException, StorageException {
-        if (file.isEmpty() || file == null) {
+            throws StorageException {
+        if (file == null || file.isEmpty()) {
             throw new StorageException("file is empty. Pls Upload a file ");
         }
 
@@ -52,14 +55,10 @@ public class FileController {
         if (!isValid) {
             throw new StorageException("invalid file exception . only allows" + allowedExtensions.toString());
         }
-        // skip validate
-        this.fileService.createDirectory(baseURI + folder);
-        // create a directory if not exist
 
-        // storage file
-        this.fileService.store(file, folder);
-        String uploadFile = this.fileService.store(file, folder);
-        ResUploadFileDTO res = new ResUploadFileDTO(uploadFile, Instant.now());
+        // Upload to MinIO (S3) and return the public URL
+        String url = this.minioService.upload(file, folder);
+        ResUploadFileDTO res = new ResUploadFileDTO(fileName, url, Instant.now());
 
         return ResponseEntity.ok().body(res);
     }

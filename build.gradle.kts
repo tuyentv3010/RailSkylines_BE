@@ -39,7 +39,9 @@ dependencies {
 	implementation("org.slf4j:slf4j-api:2.0.13")
     // Pusher
     implementation("com.pusher:pusher-http-java:1.0.0")
-	
+	// MinIO / S3-compatible object storage
+	implementation("io.minio:minio:8.5.14")
+
 }
 
 tasks.withType<Test> {
